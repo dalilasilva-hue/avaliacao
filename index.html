@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Painel de Avaliações</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --azul:#1a3a5c;
+  --azul2:#2e6da4;
+  --bg:#f0f2f5;
+  --texto:#2d3748;
+  --muted:#718096;
+  --verde:#27ae60;
+  --amarelo:#f39c12;
+  --vermelho:#e74c3c;
+  --cinza:#718096;
+  --roxo:#8e44ad;
+  --card:#ffffff;
+  --borda:#dde3ec;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--texto);min-height:100vh}
+header{background:linear-gradient(135deg,var(--azul),var(--azul2));color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:1.25rem;font-weight:850;letter-spacing:.2px}
+header p{font-size:.78rem;opacity:.86;margin-top:3px}
+.header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:22px;padding:6px 13px;font-size:.76rem;font-weight:700}
+.btn{border:none;border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.2s;white-space:nowrap}
+.btn-primary{background:#fff;color:var(--azul)}
+.btn-primary:hover{background:#e8f0fb}
+.btn-secondary{background:#e8f0fb;color:var(--azul2);border:1px solid #b8cfe8}
+.btn-secondary:hover{background:#d7e8f7}
+.btn-sm{padding:5px 10px;font-size:.72rem}
+.sync-status{font-size:.7rem;opacity:.9;max-width:360px;text-align:right;line-height:1.35}
+.alert-cache{display:none;background:#fff3cd;color:#856404;border-bottom:1px solid #ffe08a;padding:8px 28px;font-size:.78rem;font-weight:700}
+.alert-cache.show{display:block}
+.abas{display:flex;background:#fff;border-bottom:2px solid var(--borda);padding:0 28px;gap:3px;position:sticky;top:0;z-index:50;box-shadow:0 2px 6px rgba(0,0,0,.07);overflow-x:auto}
+.aba{padding:13px 15px;font-size:.8rem;font-weight:800;color:#666;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:.2s;white-space:nowrap}
+.aba:hover{color:var(--azul2)}
+.aba.ativa{color:var(--azul2);border-bottom-color:var(--azul2)}
+.secao{display:none;padding:20px 28px 44px}
+.secao.ativa{display:block}
+.resumo{display:grid;grid-template-columns:repeat(6,minmax(130px,1fr));gap:12px;margin-bottom:16px}
+.card-r{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-left:5px solid #ccc}
+.card-r .num{font-size:1.9rem;font-weight:900;line-height:1}
+.card-r .lbl{font-size:.72rem;color:#777;margin-top:4px;font-weight:700}
+.card-r.azul{border-color:var(--azul2)}.card-r.verde{border-color:var(--verde)}
+.card-r.amarelo{border-color:var(--amarelo)}.card-r.vermelho{border-color:var(--vermelho)}
+.card-r.cinza{border-color:var(--cinza)}.card-r.roxo{border-color:var(--roxo)}
+.filtros-bar{background:#fff;border-radius:12px;padding:13px 16px;margin-bottom:15px;display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:.7rem;font-weight:800;color:#555}
+.fg select,.fg input{padding:7px 10px;border:1px solid #ccd3de;border-radius:8px;font-size:.78rem;background:#f8f9fc;outline:none;min-width:135px}
+.fg select:focus,.fg input:focus{border-color:var(--azul2)}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.66rem;font-weight:900;white-space:nowrap}
+.tag-PRM{background:#e8f4fd;color:#1a5276}
+.tag-ESCOLAS{background:#eafaf1;color:#1e8449}
+.tag-REGIONAIS{background:#fef9e7;color:#9a7d0a}
+.tag-POLITICAS{background:#fdf2f8;color:#76448a}
+.tag-SEDUC{background:#fef5e7;color:#a04000}
+.tag-OUTROS{background:#edf2f7;color:#4a5568}
+.st{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:14px;font-size:.68rem;font-weight:800;white-space:nowrap}
+.st-concluido{background:#d4edda;color:#1e7e34}
+.st-andamento{background:#fff3cd;color:#856404}
+.st-pendente{background:#f8d7da;color:#721c24}
+.st-futuro{background:#e2e8f0;color:#4a5568}
+.st-pausado{background:#eee2ff;color:#6b46c1}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+thead tr{background:#eef3fb}
+thead th{padding:9px 12px;font-size:.7rem;font-weight:850;color:#4a5568;text-align:left;border-bottom:2px solid #d0dcea;white-space:nowrap}
+tbody tr{border-bottom:1px solid #eef0f4;transition:.15s}
+tbody tr:hover{background:#f5f8ff}
+td{padding:10px 12px;font-size:.79rem;vertical-align:middle}
+.td-nome{font-weight:850;color:#1a3a5c;max-width:360px}
+.obs{font-size:.68rem;color:var(--muted);margin-top:4px;line-height:1.35}
+.prazo-alerta{font-size:.66rem;color:var(--vermelho);font-weight:850;display:block;margin-top:2px}
+.entrega-real{font-size:.72rem;font-weight:850}
+.entrega-antes{color:var(--verde)}
+.entrega-depois{color:var(--vermelho)}
+.entrega-no-prazo{color:var(--azul2)}
+.barra-w{background:#eef0f4;border-radius:10px;height:7px;width:78px;display:inline-block;vertical-align:middle}
+.barra-f{height:100%;border-radius:10px;display:block}
+.pct-txt{font-size:.68rem;font-weight:800;margin-left:5px;vertical-align:middle;color:#555}
+.link-entrega{color:var(--azul2);font-size:.72rem;font-weight:800;text-decoration:none}
+.link-entrega:hover{text-decoration:underline}
+.executive-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card h2{font-size:.96rem;color:var(--azul);margin-bottom:10px}
+.timeline-list{display:flex;flex-direction:column;gap:9px}
+.timeline-item{display:grid;grid-template-columns:86px 1fr auto;gap:10px;align-items:center;border:1px solid #edf2f7;border-radius:10px;padding:9px;background:#fbfcff}
+.timeline-date{font-weight:900;color:var(--azul);font-size:.78rem}
+.timeline-title{font-weight:850;font-size:.8rem;color:#2d3748}
+.timeline-sub{font-size:.68rem;color:var(--muted);margin-top:2px}
+.gantt-wrap{overflow-x:auto}
+.gantt-table{border-collapse:collapse;font-size:.65rem;min-width:920px}
+.gantt-table th,.gantt-table td{border:1px solid #dde3ec;padding:3px 4px;white-space:nowrap}
+.gantt-table th{background:#eef3fb;font-weight:800;color:#4a5568;text-align:center}
+.gantt-table .col-tarefa{min-width:230px;text-align:left;font-weight:800;background:#f8f9fc;position:sticky;left:0;z-index:2}
+.gantt-table .col-resp{min-width:95px;background:#f8f9fc;position:sticky;left:230px;z-index:2}
+.gantt-cell-ativo{background:var(--azul2)!important;color:transparent}
+.gantt-cell-concluido{background:var(--verde)!important;color:transparent}
+.gantt-cell-vencido{background:var(--vermelho)!important;color:transparent}
+.gantt-cell-feriado{background:var(--amarelo)!important;color:transparent}
+.gantt-mes-header{background:var(--azul)!important;color:#fff!important}
+.gantt-legenda{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.72rem;align-items:center}
+.gantt-legenda span{display:flex;align-items:center;gap:5px}
+.gantt-dot{display:inline-block;width:13px;height:13px;border-radius:3px}
+.cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.cal-nav h2{font-size:1.05rem;font-weight:900;color:var(--azul)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-header{background:var(--azul);color:#fff;text-align:center;padding:7px;border-radius:7px;font-size:.72rem;font-weight:850}
+.cal-day{background:#fff;border-radius:9px;padding:7px;min-height:86px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:2px solid transparent}
+.cal-day.tem-atividade{border-color:var(--azul2);cursor:pointer}
+.cal-day.hoje-cal{background:#eef3fb;border-color:var(--azul2)}
+.cal-day.feriado-cal{background:#fff8e1;border-color:var(--amarelo)}
+.cal-day.outro-mes{opacity:.35}
+.dia-num{font-size:.85rem;font-weight:900;color:var(--azul)}
+.ponto{width:7px;height:7px;border-radius:50%}
+.dia-pontos{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px}
+.dia-label{font-size:.61rem;color:var(--muted);margin-top:2px;line-height:1.25}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:22px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h2{font-size:1rem;font-weight:900;color:var(--azul);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #eef3fb}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid #eef3fb}
+.empty{background:#fff;border-radius:12px;padding:36px;text-align:center;color:#aaa;font-size:.86rem}
+.config-box{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;border-left:5px solid var(--azul2)}
+.config-box h2{font-size:.95rem;color:var(--azul);margin-bottom:8px}
+.config-box p,.config-box li{font-size:.78rem;color:#4a5568;line-height:1.55}
+.config-box code{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:5px;padding:1px 5px;font-size:.72rem}
+pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px;overflow:auto;font-size:.72rem;line-height:1.5;margin-top:10px}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--azul);color:#fff;padding:11px 18px;border-radius:9px;font-size:.8rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:9999;transform:translateY(100px);opacity:0;transition:.35s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.verde{background:#1e7e34}.toast.vermelho{background:#c0392b}.toast.laranja{background:#e67e22}
+.link-cell{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.link-cell .btn{padding:4px 8px;font-size:.66rem}
+.link-edit-input{width:100%;padding:9px 11px;border:1px solid #ccd3de;border-radius:8px;font-size:.8rem;background:#f8f9fc;outline:none}
+.link-edit-input:focus{border-color:var(--azul2)}
+.link-help{font-size:.72rem;color:var(--muted);line-height:1.4;margin-top:6px}
+
+
+.equipe-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.equipe-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-top:5px solid var(--azul2);display:flex;gap:14px;align-items:flex-start}
+.equipe-foto{width:76px;height:76px;border-radius:50%;background:#eef3fb;border:2px solid #d0dcea;flex:0 0 76px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--azul);font-weight:900;font-size:1.25rem}
+.equipe-foto img{width:100%;height:100%;object-fit:cover}
+.equipe-info{min-width:0;flex:1}
+.equipe-card h3{font-size:.95rem;color:var(--azul);margin-bottom:4px;font-weight:900}
+.equipe-cargo{font-size:.76rem;font-weight:850;color:#4a5568;margin-bottom:10px}
+.equipe-desc{font-size:.76rem;color:#4a5568;line-height:1.45;margin-bottom:12px}
+.equipe-contato{display:flex;flex-direction:column;gap:6px;font-size:.74rem}
+.equipe-contato span,.equipe-contato a{background:#f8f9fc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 9px;color:#4a5568;text-decoration:none;word-break:break-word}
+.equipe-contato a:hover{border-color:var(--azul2);color:var(--azul2)}
+.equipe-intro{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:16px;border-left:5px solid var(--azul2)}
+.equipe-intro h2{font-size:1rem;color:var(--azul);margin-bottom:8px}
+.equipe-intro p{font-size:.8rem;color:#4a5568;line-height:1.5}
+.equipe-aviso{font-size:.74rem;color:#718096;margin-top:8px;line-height:1.4}
+
+@media(max-width:1000px){.resumo{grid-template-columns:repeat(3,1fr)}.executive-grid{grid-template-columns:1fr}}
+@media(max-width:640px){header,.secao,.abas{padding-left:14px;padding-right:14px}.resumo{grid-template-columns:repeat(2,1fr)}td,th{padding:8px 7px}.sync-status{text-align:left}.timeline-item{grid-template-columns:1fr}}
+@media(min-width:1600px){
+  header h1{font-size:1.45rem}
+  td{font-size:.88rem;padding:12px 14px}
+  thead th{font-size:.78rem}
+  .card-r .num{font-size:2.25rem}
+  .cal-day{min-height:104px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>▣ Painel de Avaliações</h1>
+    <p>Fonte oficial: Notion · visão de leitura para acompanhamento entre áreas</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-primary btn-sm" onclick="atualizarAgora()">↻ Atualizar agora</button>
+    <button class="btn btn-primary btn-sm" onclick="alternarTelaCheia()">⛶ Tela cheia</button>
+    <div class="badge" id="badge-hoje"></div>
+    <div class="sync-status" id="sync-status">Aguardando carregamento...</div>
+  </div>
+</header>
+
+<div class="alert-cache" id="cache-alert"></div>
+
+<div class="abas">
+  <button class="aba ativa" onclick="trocarAba('painel',this)">▣ Painel Executivo</button>
+  <button class="aba" onclick="trocarAba('calendario',this)">▤ Calendário Macro</button>
+  <button class="aba" onclick="trocarAba('gantt',this)">▥ Linha do Tempo</button>
+  <button class="aba" onclick="trocarAba('mensal',this)">▦ Cal. Mensal</button>
+  <button class="aba" onclick="trocarAba('config',this)">⚙ Configuração</button>
+  <button class="aba" onclick="trocarAba('equipe',this)">◫ Eixo de Avaliação</button>
+</div>
+
+<section class="secao ativa" id="secao-painel">
+  <div class="resumo" id="resumo-cards"></div>
+  <div class="executive-grid">
+    <div class="card">
+      <h2>Próximas entregas</h2>
+      <div class="timeline-list" id="proximas-entregas"></div>
+    </div>
+    <div class="card">
+      <h2>Pontos de atenção</h2>
+      <div class="timeline-list" id="pontos-atencao"></div>
+    </div>
+  </div>
+</section>
+
+
+<section class="secao" id="secao-equipe">
+  <div class="equipe-intro">
+    <h2>Quem é o Eixo de Avaliação</h2>
+    <p>Esta página apresenta a composição do time responsável pela gestão, produção, revisão, organização e acompanhamento das avaliações. A proposta é facilitar o contato de pessoas de fora do eixo e deixar mais claro o papel de cada pessoa na operação.</p>
+    <p class="equipe-aviso">Quando o proxy do Notion enviar os dados da equipe, esta aba será preenchida automaticamente. Enquanto isso, o HTML mantém uma versão-base com espaço para foto, Slack e e-mail.</p>
+  </div>
+
+  <div class="equipe-grid" id="equipe-grid"></div>
+</section>
+
+<section class="secao" id="secao-calendario">
+  <div class="filtros-bar">
+    <div class="fg"><label>Buscar</label><input type="text" id="busca" placeholder="Avaliação, responsável..." oninput="renderTudo()"/></div>
+    <div class="fg"><label>Programa</label><select id="filtro-programa" onchange="renderTudo()"><option value="">Todos</option><option>PRM</option><option>ESCOLAS</option><option>REGIONAIS</option><option>POLITICAS</option><option>SEDUC</option><option>OUTROS</option></select></div>
+    <div class="fg"><label>Tipo</label><select id="filtro-tipo" onchange="renderTudo()"><option value="">Todos</option><option>Diagnóstica</option><option>Alfabetização</option><option>Microciclo</option><option>SAEB</option><option>Bimestral</option><option>Prova Paulista</option><option>SEDUC</option><option>Outro</option></select></div>
+    <div class="fg"><label>Status</label><select id="filtro-status" onchange="renderTudo()"><option value="">Todos</option><option value="concluido">Concluído</option><option value="andamento">Em andamento</option><option value="pendente">Vencido/Pendente</option><option value="futuro">Futuro</option><option value="pausado">Pausado</option></select></div>
+    <div class="fg"><label>Mês</label><select id="filtro-mes" onchange="renderTudo()"><option value="">Todos</option><option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option><option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option><option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option></select></div>
+    <button class="btn btn-secondary" onclick="limparFiltros()">Limpar</button>
+    <button class="btn btn-secondary" onclick="exportarCSV()">Exportar CSV</button>
+  </div>
+  <div id="container-tabela"></div>
+</section>
+
+<section class="secao" id="secao-gantt">
+  <div class="filtros-bar">
+    <div class="fg"><label>Programa</label><select id="gantt-programa" onchange="renderGantt()"><option value="">Todos</option><option>PRM</option><option>ESCOLAS</option><option>REGIONAIS</option><option>POLITICAS</option><option>SEDUC</option><option>OUTROS</option></select></div>
+    <div class="fg"><label>Mês início</label><input type="month" id="gantt-ini" onchange="renderGantt()"/></div>
+    <div class="fg"><label>Mês fim</label><input type="month" id="gantt-fim" onchange="renderGantt()"/></div>
+    <button class="btn btn-secondary" onclick="resetGantt()">Resetar</button>
+  </div>
+  <div class="gantt-wrap" id="gantt-container"></div>
+</section>
+
+<section class="secao" id="secao-mensal">
+  <div class="cal-nav">
+    <button class="btn btn-secondary" onclick="navCal(-1)">◀</button>
+    <h2 id="cal-titulo"></h2>
+    <button class="btn btn-secondary" onclick="navCal(1)">▶</button>
+    <button class="btn btn-secondary btn-sm" onclick="irHoje()">Hoje</button>
+  </div>
+  <div class="cal-grid">
+    <div class="cal-header">Dom</div><div class="cal-header">Seg</div><div class="cal-header">Ter</div><div class="cal-header">Qua</div><div class="cal-header">Qui</div><div class="cal-header">Sex</div><div class="cal-header">Sáb</div>
+  </div>
+  <div class="cal-grid" id="cal-grid" style="margin-top:5px"></div>
+</section>
+
+<section class="secao" id="secao-config">
+  <div class="config-box">
+    <h2>Como este painel lê o Notion</h2>
+    <p>Este HTML é somente leitura. Ele não cria, edita nem apaga nada no Notion. A base compartilhada continua funcionando normalmente para as outras áreas.</p>
+    <p>Filtro padrão aplicado pelo HTML: mostra apenas itens com <code>Eixo = Avaliação</code> e <code>Arquivar Projeto ≠ marcado</code>.</p>
+  </div>
+  <div class="config-box">
+    <h2>Campos usados no database “(Planejamento) Projetos”</h2>
+    <ul style="padding-left:18px">
+      <li><strong>Nome</strong> → avaliação/entrega macro.</li>
+      <li><strong>Prazo</strong> → início previsto e entrega prevista. Se o database usar outro nome, o HTML também tenta ler: Data, Período, Entrega, Data de entrega ou Entrega prevista.</li>
+      <li><strong>Status</strong> → status macro.</li>
+      <li><strong>Responsáveis</strong> → responsável macro.</li>
+      <li><strong>Descrição do Projeto</strong> → observação executiva.</li>
+      <li><strong>URL</strong> → link do entregável ou referência.</li>
+      <li><strong>Tarefas Relacionadas</strong> → usado apenas para tentar descobrir a entrega real, sem mostrar microetapas.</li>
+    </ul>
+  </div>
+  <div class="config-box">
+    <h2>Configuração no HTML</h2>
+    <p>Este painel já está configurado para usar <code>/.netlify/functions/notion</code>. Se você subir o pacote completo no Netlify, não precisa editar a URL do proxy.</p>
+    <pre>const PROXY_URL = '/.netlify/functions/notion';
+const DATABASE_ID = '2df6e2c7d2c9819e8ffed4fae0536d3d';</pre>
+  </div>
+  <div class="config-box">
+    <h2>Automação com Notion via Netlify</h2>
+    <p>Este pacote já inclui o arquivo <code>netlify/functions/notion.js</code>. O token fica seguro nas variáveis de ambiente do Netlify.</p>
+    <pre>export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  const token = process.env.NOTION_TOKEN;
+  const databaseId = process.env.NOTION_DATABASE_ID;
+
+  const notionHeaders = {
+    "Authorization": `Bearer ${token}`,
+    "Notion-Version": "2022-06-28",
+    "Content-Type": "application/json"
+  };
+
+  let allResults = [];
+  let cursor = undefined;
+
+  do {
+    const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+      method: "POST",
+      headers: notionHeaders,
+      body: JSON.stringify({
+        page_size: 100,
+        start_cursor: cursor,
+        filter: {
+          and: [
+            { property: "Arquivar Projeto", checkbox: { equals: false } },
+            { property: "Eixo", multi_select: { contains: "Avaliação" } }
+          ]
+        }
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json(data);
+
+    allResults = allResults.concat(data.results || []);
+    cursor = data.has_more ? data.next_cursor : undefined;
+  } while (cursor);
+
+  for (const page of allResults) {
+    const rel = page.properties?.["Tarefas Relacionadas"]?.relation || [];
+    page.relatedTasks = [];
+
+    for (const item of rel) {
+      const taskResp = await fetch(`https://api.notion.com/v1/pages/${item.id}`, {
+        headers: notionHeaders
+      });
+      const task = await taskResp.json();
+      page.relatedTasks.push(task);
+    }
+  }
+
+  res.status(200).json({ results: allResults, lastSync: new Date().toISOString() });
+}</pre>
+    <p>Variáveis de ambiente na Vercel:</p>
+    <pre>NOTION_TOKEN = seu_token_da_integração
+NOTION_DATABASE_ID = 2df6e2c7d2c9819e8ffed4fae0536d3d</pre>
+  </div>
+
+  <div class="config-box">
+    <h2>Regras dos Pontos de Atenção</h2>
+    <p>O bloco “Pontos de atenção” é calculado automaticamente pelo HTML. Ele considera:</p>
+    <ul style="padding-left:18px">
+      <li>Avaliações com progresso abaixo de 30%.</li>
+      <li>Risco de conflito entre cronogramas, quando há sobreposição de períodos.</li>
+      <li>Entregas previstas para a mesma semana.</li>
+      <li>Ausência de data de início ou entrega prevista.</li>
+      <li>Avaliações pausadas.</li>
+      <li>Prazos vencidos ou próximos, quando faltam até 5 dias.</li>
+    </ul>
+  </div>
+
+
+  <div class="config-box">
+    <h2>Campos sugeridos no Notion para a aba “Eixo de Avaliação”</h2>
+    <p>Para preencher a equipe automaticamente, o proxy precisa enviar uma lista chamada <code>equipe</code>. O HTML está preparado para ler os seguintes campos:</p>
+    <ul style="padding-left:18px">
+      <li><strong>Nome</strong> → nome da pessoa.</li>
+      <li><strong>Cargo</strong> ou <strong>Função</strong> → papel no eixo.</li>
+      <li><strong>Descrição</strong>, <strong>O que faz</strong> ou <strong>Responsabilidades</strong> → resumo da atuação.</li>
+      <li><strong>Slack</strong> → usuário ou link do Slack.</li>
+      <li><strong>E-mail</strong> ou <strong>Email</strong> → contato por e-mail.</li>
+      <li><strong>Foto</strong> ou <strong>Imagem</strong> → arquivo ou URL da foto.</li>
+    </ul>
+  </div>
+
+</section>
+
+<div class="overlay" id="modal-dia">
+  <div class="modal">
+    <h2 id="modal-dia-titulo">Atividades do dia</h2>
+    <div id="modal-dia-conteudo"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="fecharModal('modal-dia')">Fechar</button></div>
+  </div>
+</div>
+
+
+<div class="overlay" id="modal-link">
+  <div class="modal">
+    <h2>Editar link da prova</h2>
+    <input type="hidden" id="link-edit-id"/>
+    <label style="font-size:.72rem;font-weight:800;color:#555">Link do entregável/prova</label>
+    <input class="link-edit-input" type="url" id="link-edit-url" placeholder="Cole aqui o link correto"/>
+    <div class="link-help">
+      Este ajuste altera apenas o link exibido nesta Painel de Avaliações, salvo no navegador em uso. Ele não edita o Notion.
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-link')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLinkEditado()">Salvar link</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIGURAÇÃO DO NOTION
+// ══════════════════════════════════════════════════════
+// Cole aqui a URL do seu proxy. Exemplo:
+// const PROXY_URL = '/.netlify/functions/notion';
+const PROXY_URL = '/.netlify/functions/notion';
+
+// Database "(Planejamento) Projetos"
+const DATABASE_ID = '2df6e2c7d2c9819e8ffed4fae0536d3d';
+
+// Atualização automática: 5 minutos
+const POLLING_MS = 5 * 60 * 1000;
+
+// ══════════════════════════════════════════════════════
+// FERIADOS NACIONAIS / SP 2026
+// ══════════════════════════════════════════════════════
+const FERIADOS={
+  "2026-01-01":"Confraternização Universal",
+  "2026-02-16":"Carnaval","2026-02-17":"Carnaval","2026-02-18":"Carnaval",
+  "2026-04-03":"Sexta-feira Santa","2026-04-05":"Páscoa",
+  "2026-04-21":"Tiradentes","2026-05-01":"Dia do Trabalho",
+  "2026-06-04":"Corpus Christi","2026-07-09":"Revolução Constitucionalista",
+  "2026-09-07":"Independência","2026-10-12":"Nossa Sra. Aparecida",
+  "2026-11-02":"Finados","2026-11-15":"Proclamação da República",
+  "2026-11-20":"Consciência Negra","2026-12-25":"Natal"
+};
+
+const hoje = new Date(); hoje.setHours(0,0,0,0);
+let avaliacoes = [];
+let equipeAvaliacao = [];
+let calAno = hoje.getFullYear();
+let calMes = hoje.getMonth();
+
+function dataStr(d){ return d.toISOString().slice(0,10); }
+function parseData(s){ if(!s) return null; const d=new Date(s+'T00:00:00'); return isNaN(d)?null:d; }
+function fmtData(s){ const d=parseData(s); if(!d) return '—'; return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}); }
+function fmtDataLonga(s){ const d=parseData(s); if(!d) return '—'; return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'}); }
+function ehFeriado(s){ return FERIADOS[s] || null; }
+function diasEntre(a,b){ if(!a||!b) return null; return Math.round((parseData(b)-parseData(a))/86400000); }
+function diasRest(s){ const d=parseData(s); if(!d) return null; return Math.round((d-hoje)/86400000); }
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+const EQUIPE_FALLBACK = [
+  {
+    nome:'Dalila Araújo',
+    cargo:'Coordenação de Avaliação',
+    descricao:'Responsável pela visão estratégica do eixo, priorização das demandas, governança das entregas, articulação entre áreas e validação executiva dos processos avaliativos.',
+    slack:'',
+    email:'',
+    foto:''
+  },
+  {
+    nome:'Maria Beatriz',
+    cargo:'Gestão de Avaliação',
+    descricao:'Responsável pela organização operacional da esteira de avaliação, acompanhamento de prazos, alinhamento com fornecedores e apoio à previsibilidade das entregas.',
+    slack:'',
+    email:'',
+    foto:''
+  },
+  {
+    nome:'Gabriel Faustino',
+    cargo:'Especialista de Matemática',
+    descricao:'Responsável pela análise técnica e pedagógica dos itens de Matemática, alinhamento às matrizes e habilidades avaliadas, revisão de qualidade e apoio à montagem dos instrumentos.',
+    slack:'',
+    email:'',
+    foto:''
+  },
+  {
+    nome:'Erika',
+    cargo:'Especialista de Língua Portuguesa',
+    descricao:'Responsável pela análise técnica e pedagógica dos itens de Língua Portuguesa, alinhamento às matrizes e habilidades avaliadas, revisão de qualidade e apoio à montagem dos instrumentos.',
+    slack:'',
+    email:'',
+    foto:''
+  },
+  {
+    nome:'Carol',
+    cargo:'Assistente de Avaliação',
+    descricao:'Responsável pelo apoio à organização da esteira, controle de informações, cadastro e conferência de dados, acompanhamento de tarefas e suporte às rotinas do eixo.',
+    slack:'',
+    email:'',
+    foto:''
+  }
+];
+
+function propEmail(p){ return p?.email || ''; }
+function propPhone(p){ return p?.phone_number || ''; }
+function propFilesUrl(p){
+  const arr = p?.files || [];
+  if(!arr.length) return '';
+  const f = arr[0];
+  return f?.file?.url || f?.external?.url || '';
+}
+function propSelectName(p){ return p?.select?.name || ''; }
+
+function mapearPessoaEquipe(page){
+  const p = page.properties || {};
+  const nome = propTitle(p['Nome']) || propTitle(p['Name']) || propText(p['Nome']) || 'Sem nome';
+  return {
+    nome,
+    cargo: propText(p['Cargo']) || propSelectName(p['Cargo']) || propText(p['Função']) || propSelectName(p['Função']) || propText(p['Funcao']) || propSelectName(p['Funcao']) || '',
+    descricao: propText(p['Descrição']) || propText(p['Descricao']) || propText(p['O que faz']) || propText(p['Responsabilidades']) || '',
+    slack: propText(p['Slack']) || propUrl(p['Slack']) || '',
+    email: propEmail(p['E-mail']) || propEmail(p['Email']) || propText(p['E-mail']) || propText(p['Email']) || '',
+    foto: propFilesUrl(p['Foto']) || propFilesUrl(p['Imagem']) || propUrl(p['Foto']) || propUrl(p['Imagem']) || ''
+  };
+}
+
+function iniciais(nome){
+  const partes = String(nome||'').trim().split(/\s+/).filter(Boolean);
+  if(!partes.length) return '—';
+  if(partes.length===1) return partes[0].slice(0,2).toUpperCase();
+  return (partes[0][0] + partes[partes.length-1][0]).toUpperCase();
+}
+
+function renderEquipe(){
+  const grid = document.getElementById('equipe-grid');
+  if(!grid) return;
+  const lista = (equipeAvaliacao && equipeAvaliacao.length) ? equipeAvaliacao : EQUIPE_FALLBACK;
+  grid.innerHTML = lista.map(p=>{
+    const foto = p.foto ? `<img src="${escapeHtml(p.foto)}" alt="Foto de ${escapeHtml(p.nome)}">` : iniciais(p.nome);
+    const slack = p.slack ? `<a target="_blank" href="${String(p.slack).startsWith('http') ? escapeHtml(p.slack) : '#'}"><strong>Slack:</strong> ${escapeHtml(p.slack)}</a>` : `<span><strong>Slack:</strong> preencher</span>`;
+    const email = p.email ? `<a href="mailto:${escapeHtml(p.email)}"><strong>E-mail:</strong> ${escapeHtml(p.email)}</a>` : `<span><strong>E-mail:</strong> preencher</span>`;
+    return `<div class="equipe-card">
+      <div class="equipe-foto">${foto}</div>
+      <div class="equipe-info">
+        <h3>${escapeHtml(p.nome)}</h3>
+        <div class="equipe-cargo">${escapeHtml(p.cargo || 'Função não informada')}</div>
+        <div class="equipe-desc">${escapeHtml(p.descricao || 'Descrição não informada.')}</div>
+        <div class="equipe-contato">${slack}${email}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+function escapeJs(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,''); }
+function getLinksEditados(){
+  try { return JSON.parse(localStorage.getItem('tv_avaliacoes_links_editados') || '{}'); }
+  catch(e){ return {}; }
+}
+function setLinksEditados(obj){
+  localStorage.setItem('tv_avaliacoes_links_editados', JSON.stringify(obj || {}));
+}
+function obterLink(a){
+  const editados = getLinksEditados();
+  return editados[a.id] || a.link || '';
+}
+function abrirEditorLink(id){
+  const item = avaliacoes.find(a => a.id === id);
+  if(!item){ toast('Não encontrei esta avaliação para editar o link.','vermelho'); return; }
+  document.getElementById('link-edit-id').value = id;
+  document.getElementById('link-edit-url').value = obterLink(item) || '';
+  document.getElementById('modal-link').classList.add('open');
+  setTimeout(()=>document.getElementById('link-edit-url')?.focus(),80);
+}
+function salvarLinkEditado(){
+  const id = document.getElementById('link-edit-id').value;
+  const url = document.getElementById('link-edit-url').value.trim();
+  const links = getLinksEditados();
+  if(url) links[id] = url;
+  else delete links[id];
+  setLinksEditados(links);
+  fecharModal('modal-link');
+  renderTudo();
+  toast('Link atualizado nesta Painel de Avaliações.','verde');
+}
+
+
+function propTitle(p){ return p?.title?.map(t=>t.plain_text).join('') || ''; }
+function propText(p){ return p?.rich_text?.map(t=>t.plain_text).join('') || ''; }
+function propUrl(p){ return p?.url || ''; }
+function propStatus(p){ return p?.status?.name || ''; }
+function propDateStart(p){ return p?.date?.start || ''; }
+function propDateEnd(p){ return p?.date?.end || p?.date?.start || ''; }
+function propPeople(p){ return (p?.people||[]).map(x=>x.name||x.id).join(', '); }
+function propFormulaPct(p){
+  if(!p?.formula) return null;
+  const f=p.formula;
+  if(f.type==='number' && typeof f.number==='number') return normalizarPct(f.number);
+  if(f.type==='string') {
+    const m=String(f.string||'').match(/(\d+(?:[.,]\d+)?)\s*%?/);
+    if(m) return normalizarPct(parseFloat(m[1].replace(',','.')));
+  }
+  return null;
+}
+function normalizarPct(v){
+  if(v === null || isNaN(v)) return 0;
+  if(v > 1) return Math.max(0, Math.min(1, v/100));
+  return Math.max(0, Math.min(1, v));
+}
+
+function inferirPrograma(nome, eixo){
+  const t=(nome+' '+(eixo||'')).toUpperCase();
+  if(t.includes('PRM')||t.includes('REDES MUNICIPAIS')) return 'PRM';
+  if(t.includes('ESCOLA')||t.includes('MEN10')) return 'ESCOLAS';
+  if(t.includes('REGIONAL')) return 'REGIONAIS';
+  if(t.includes('POLÍTICA')||t.includes('POLITICA')||t.includes('VOAR')||t.includes('PROVA PAULISTA')) return 'POLITICAS';
+  if(t.includes('SEDUC')) return 'SEDUC';
+  return 'OUTROS';
+}
+function inferirTipo(nome){
+  const t=nome.toUpperCase();
+  if(t.includes('DIAGN')) return 'Diagnóstica';
+  if(t.includes('ALFABET')) return 'Alfabetização';
+  if(t.includes('MICROCICLO')) return 'Microciclo';
+  if(t.includes('SAEB')) return 'SAEB';
+  if(t.includes('BIMESTRAL')||t.includes('BI.')) return 'Bimestral';
+  if(t.includes('PROVA PAULISTA')||t.includes('VOAR')) return 'Prova Paulista';
+  if(t.includes('SEDUC')) return 'SEDUC';
+  return 'Outro';
+}
+function statusMacro(statusNotion, fim, entregaReal, pct){
+  const s=(statusNotion||'').toLowerCase();
+  if(s.includes('pausado')) return 'pausado';
+  if(s.includes('realizado') || pct >= 1 || entregaReal) return 'concluido';
+  if(s.includes('em andamento') || s.includes('recorrente')) {
+    const f=parseData(fim);
+    if(f && f < hoje) return 'pendente';
+    return 'andamento';
+  }
+  const f=parseData(fim);
+  if(f && f < hoje) return 'pendente';
+  return 'futuro';
+}
+function statusLabel(st){
+  return {
+    concluido:'Concluído',
+    andamento:'Em andamento',
+    pendente:'Vencido/Pendente',
+    futuro:'Futuro',
+    pausado:'Pausado'
+  }[st] || st;
+}
+function statusClass(st){
+  return {
+    concluido:'st-concluido',
+    andamento:'st-andamento',
+    pendente:'st-pendente',
+    futuro:'st-futuro',
+    pausado:'st-pausado'
+  }[st] || 'st-futuro';
+}
+function corBarra(p){ if(p>=1) return '#27ae60'; if(p>=.5) return '#f39c12'; if(p>0) return '#e67e22'; return '#cbd5e0'; }
+
+function extrairEntregaReal(page){
+  const related = page.relatedTasks || [];
+  const candidatas = [];
+
+  related.forEach(task=>{
+    const props = task.properties || {};
+    const nome = propTitle(props['Nome']) || propTitle(props['Name']) || propTitle(props['Tarefa']) || '';
+    const status = propStatus(props['Status']);
+    const prazo = props['Prazo'] || props['Data'] || props['Date'] || props['Entrega'] || props['Data de entrega'];
+    const fim = propDateEnd(prazo);
+    const editado = task.last_edited_time ? task.last_edited_time.slice(0,10) : '';
+
+    const n = nome.toLowerCase();
+    const pareceEntrega = n.includes('entrega') || n.includes('liberação') || n.includes('liberacao') || n.includes('envio') || n.includes('publicação') || n.includes('publicacao');
+    const realizado = (status||'').toLowerCase().includes('realizado') || (status||'').toLowerCase().includes('concl');
+
+    if(pareceEntrega && (realizado || fim || editado)){
+      candidatas.push({nome, data:fim || editado, fonte:'Tarefas Relacionadas'});
+    }
+  });
+
+  candidatas.sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+  return candidatas[0] || null;
+}
+
+function mapearPagina(page){
+  const p = page.properties || {};
+  const nome = propTitle(p['Nome']) || propTitle(p['Name']) || 'Sem nome';
+  const campoPrazo =
+    p['Prazo'] ||
+    p['Data'] ||
+    p['Date'] ||
+    p['Período'] ||
+    p['Periodo'] ||
+    p['Entrega'] ||
+    p['Data de entrega'] ||
+    p['Entrega prevista'];
+
+  const inicio = propDateStart(campoPrazo);
+  const fim = propDateEnd(campoPrazo);
+  const statusNotion = propStatus(p['Status']);
+  const responsavel = propPeople(p['Responsáveis']) || '—';
+  const obs = propText(p['Descrição do Projeto']);
+  const link = propUrl(p['userDefined:URL']) || propUrl(p['URL']) || page.url || '';
+  const progresso = propFormulaPct(p['Progresso']);
+  const entregaObj = extrairEntregaReal(page);
+  const entregaReal = entregaObj?.data || (statusNotion === 'Realizado' ? (page.last_edited_time||'').slice(0,10) : '');
+  const eixo = (()=>{ try { return (p['Eixo']?.multi_select||[]).map(x=>x.name).join(', '); } catch(e){ return ''; }})();
+  const programa = inferirPrograma(nome,eixo);
+  const tipo = inferirTipo(nome);
+  const pct = progresso ?? (statusNotion === 'Realizado' ? 1 : statusNotion === 'Em andamento' ? .5 : 0);
+  const st = statusMacro(statusNotion,fim,entregaReal,pct);
+
+  return {
+    id: page.id || page.url || nome,
+    nome, programa, tipo, responsavel, inicio, fim, entregaReal,
+    entregaFonte: entregaObj?.fonte || (entregaReal ? 'Última edição em' : ''),
+    statusNotion, st, pct, obs, link,
+    notionUrl: page.url || link
+  };
+}
+
+async function carregarNotion(){
+  if(!PROXY_URL || PROXY_URL.includes('COLE_AQUI')){
+    carregarDemo();
+    document.getElementById('sync-status').textContent='Modo demonstração: os dados exibidos são exemplos. Configure a URL do proxy para carregar as avaliações reais do Notion.';
+    document.getElementById('cache-alert').classList.add('show');
+    document.getElementById('cache-alert').textContent='⚠️ Modo demonstração — as datas exibidas são exemplos. Cole a URL do proxy no HTML para usar dados reais do Notion.';
+    return;
+  }
+
+  try{
+    setSync('Atualizando dados do Notion...');
+    const url = PROXY_URL.includes('?') ? `${PROXY_URL}&database_id=${DATABASE_ID}` : `${PROXY_URL}?database_id=${DATABASE_ID}`;
+    const resp = await fetch(url, { cache:'no-store' });
+    if(!resp.ok) throw new Error('Falha HTTP '+resp.status);
+    const data = await resp.json();
+    const mapped = (data.results||[]).map(mapearPagina).filter(a=>a.nome);
+    avaliacoes = mapped.sort((a,b)=>String(a.fim||'9999').localeCompare(String(b.fim||'9999')));
+
+    // Opcional: se o proxy também enviar dados da equipe em data.equipe,
+    // esta aba será preenchida automaticamente a partir do Notion.
+    equipeAvaliacao = (data.equipe || data.resultsEquipe || []).map(mapearPessoaEquipe).filter(p=>p.nome);
+    localStorage.setItem('tv_avaliacoes_cache', JSON.stringify({data:avaliacoes, atualizadoEm:new Date().toISOString()}));
+    document.getElementById('cache-alert').classList.remove('show');
+    setSync('Última atualização: '+new Date().toLocaleString('pt-BR'));
+    renderTudo();
+  }catch(err){
+    const cache = localStorage.getItem('tv_avaliacoes_cache');
+    if(cache){
+      const parsed = JSON.parse(cache);
+      avaliacoes = parsed.data || [];
+      document.getElementById('cache-alert').classList.add('show');
+      document.getElementById('cache-alert').textContent='⚠️ Dados em cache — última atualização: '+new Date(parsed.atualizadoEm).toLocaleString('pt-BR');
+      setSync('Falha ao atualizar. Exibindo cache.');
+      renderTudo();
+    }else{
+      carregarDemo();
+      document.getElementById('cache-alert').classList.add('show');
+      document.getElementById('cache-alert').textContent='⚠️ Não foi possível acessar o Notion e não há cache salvo. Exibindo dados demonstrativos.';
+      setSync('Erro: '+err.message);
+    }
+  }
+}
+
+function carregarDemo(){
+  avaliacoes = [
+    {id:'demo1',nome:'Acompanhamento de Alfabetização — Maio',programa:'PRM',tipo:'Alfabetização',responsavel:'Equipe Avaliação',inicio:'2026-04-20',fim:'2026-05-08',entregaReal:'2026-05-07',st:'concluido',pct:1,obs:'Exemplo de entrega concluída antes do prazo.',link:'#'},
+    {id:'demo2',nome:'Avaliação Modelo SAEB — Junho',programa:'PRM',tipo:'SAEB',responsavel:'Equipe Avaliação',inicio:'2026-05-12',fim:'2026-05-30',entregaReal:'',st:'andamento',pct:.5,obs:'Exemplo de avaliação em andamento.',link:'#'},
+    {id:'demo3',nome:'Prova Paulista VOAR — Simulado',programa:'POLITICAS',tipo:'Prova Paulista',responsavel:'Equipe Avaliação',inicio:'2026-06-01',fim:'2026-06-18',entregaReal:'',st:'futuro',pct:0,obs:'Exemplo de entrega futura.',link:'#'},
+    {id:'demo4',nome:'Acompanhamento de Alfabetização — Agosto',programa:'PRM',tipo:'Alfabetização',responsavel:'Equipe Avaliação',inicio:'2026-07-20',fim:'2026-08-07',entregaReal:'',st:'futuro',pct:0,obs:'Exemplo de entrega prevista para agosto.',link:'#'},
+    {id:'demo5',nome:'Avaliação Modelo SAEB — Setembro',programa:'PRM',tipo:'SAEB',responsavel:'Equipe Avaliação',inicio:'2026-08-10',fim:'2026-08-28',entregaReal:'',st:'futuro',pct:0,obs:'Exemplo de entrega prevista para setembro.',link:'#'},
+    {id:'demo6',nome:'Acompanhamento de Alfabetização — Outubro',programa:'PRM',tipo:'Alfabetização',responsavel:'Equipe Avaliação',inicio:'2026-09-14',fim:'2026-10-02',entregaReal:'',st:'futuro',pct:0,obs:'Exemplo de entrega prevista para outubro.',link:'#'},
+    {id:'demo7',nome:'Avaliação Modelo SAEB — Novembro',programa:'PRM',tipo:'SAEB',responsavel:'Equipe Avaliação',inicio:'2026-10-13',fim:'2026-10-30',entregaReal:'',st:'futuro',pct:0,obs:'Exemplo de entrega prevista para novembro.',link:'#'},
+    {id:'demo8',nome:'Avaliação Pausada — Exemplo',programa:'OUTROS',tipo:'Outro',responsavel:'Equipe Avaliação',inicio:'2026-08-03',fim:'2026-08-14',entregaReal:'',st:'pausado',pct:.2,obs:'Exemplo para validar o ponto de atenção de avaliação pausada.',link:'#'},
+    {id:'demo9',nome:'Avaliação sem data — Exemplo',programa:'OUTROS',tipo:'Outro',responsavel:'Equipe Avaliação',inicio:'',fim:'',entregaReal:'',st:'futuro',pct:0,obs:'Exemplo para validar o ponto de atenção de ausência de data.',link:'#'}
+  ];
+  renderTudo();
+}
+
+function setSync(txt){ document.getElementById('sync-status').textContent = txt; }
+function atualizarAgora(){ carregarNotion(); toast('Atualização solicitada.','verde'); }
+function alternarTelaCheia(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); }
+
+function aplicarFiltros(lista){
+  const busca=(document.getElementById('busca')?.value||'').toLowerCase();
+  const prog=document.getElementById('filtro-programa')?.value||'';
+  const tipo=document.getElementById('filtro-tipo')?.value||'';
+  const status=document.getElementById('filtro-status')?.value||'';
+  const mes=document.getElementById('filtro-mes')?.value||'';
+  return lista.filter(a=>{
+    if(busca && !(`${a.nome} ${a.responsavel} ${a.obs}`.toLowerCase().includes(busca))) return false;
+    if(prog && a.programa!==prog) return false;
+    if(tipo && a.tipo!==tipo) return false;
+    if(status && a.st!==status) return false;
+    if(mes){
+      const m=parseInt(mes);
+      const ini=parseData(a.inicio), fim=parseData(a.fim);
+      if(!((ini&&ini.getMonth()+1===m)||(fim&&fim.getMonth()+1===m))) return false;
+    }
+    return true;
+  });
+}
+
+function renderTudo(){
+  renderResumo();
+  renderPainel();
+  renderCalendario();
+  renderGantt();
+  renderCalMensal();
+  renderEquipe();
+}
+
+function renderResumo(){
+  const total=avaliacoes.length;
+  const concl=avaliacoes.filter(a=>a.st==='concluido').length;
+  const andamento=avaliacoes.filter(a=>a.st==='andamento').length;
+  const pend=avaliacoes.filter(a=>a.st==='pendente').length;
+  const futuro=avaliacoes.filter(a=>a.st==='futuro').length;
+  const atrasoEntrega=avaliacoes.filter(a=>a.entregaReal && a.fim && parseData(a.entregaReal)>parseData(a.fim)).length;
+  document.getElementById('resumo-cards').innerHTML=`
+    <div class="card-r azul"><div class="num" style="color:var(--azul2)">${total}</div><div class="lbl">Avaliações macro</div></div>
+    <div class="card-r verde"><div class="num" style="color:var(--verde)">${concl}</div><div class="lbl">Concluídas</div></div>
+    <div class="card-r amarelo"><div class="num" style="color:var(--amarelo)">${andamento}</div><div class="lbl">Em andamento</div></div>
+    <div class="card-r vermelho"><div class="num" style="color:var(--vermelho)">${pend}</div><div class="lbl">Vencidas/Pendentes</div></div>
+    <div class="card-r cinza"><div class="num" style="color:var(--cinza)">${futuro}</div><div class="lbl">Futuras</div></div>
+    <div class="card-r roxo"><div class="num" style="color:var(--roxo)">${atrasoEntrega}</div><div class="lbl">Entregues após prazo</div></div>
+  `;
+}
+
+function renderPainel(){
+  const proximas = avaliacoes
+    .filter(a=>a.fim && a.st!=='concluido' && a.st!=='pausado')
+    .sort((a,b)=>String(a.fim).localeCompare(String(b.fim)))
+    .slice(0,8);
+
+  document.getElementById('proximas-entregas').innerHTML = proximas.length ? proximas.map(a=>`
+    <div class="timeline-item">
+      <div class="timeline-date">${fmtData(a.fim)}</div>
+      <div>
+        <div class="timeline-title">${escapeHtml(a.nome)}</div>
+        <div class="timeline-sub">${a.tipo} · ${tagLabel(a.programa)} · ${escapeHtml(a.responsavel)}</div>
+      </div>
+      <span class="st ${statusClass(a.st)}">${statusLabel(a.st)}</span>
+    </div>
+  `).join('') : '<div class="empty">Nenhuma entrega futura encontrada.</div>';
+
+  const atencao = gerarPontosAtencao();
+
+  document.getElementById('pontos-atencao').innerHTML = atencao.length ? atencao.map(p=>{
+    return `<div class="timeline-item" style="grid-template-columns:1fr;border-left:4px solid ${corAtencao(p.tipo)}">
+      <div>
+        <div class="timeline-title">${escapeHtml(p.tipo)}</div>
+        <div class="timeline-sub" style="font-weight:850;color:#2d3748">${escapeHtml(p.nome)}</div>
+        <div class="timeline-sub">${escapeHtml(p.detalhe)} · ${escapeHtml(p.item.responsavel || '—')}</div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Nenhum ponto de atenção no momento.</div>';
+}
+
+function tagLabel(prog){ return {PRM:'PRM',ESCOLAS:'ESCOLAS',REGIONAIS:'REGIONAIS',POLITICAS:'POL. PÚB.',SEDUC:'SEDUC',OUTROS:'OUTROS'}[prog]||prog; }
+
+function periodoSobrepoe(a,b){
+  const ai=parseData(a.inicio), af=parseData(a.fim), bi=parseData(b.inicio), bf=parseData(b.fim);
+  if(!ai || !af || !bi || !bf) return false;
+  return ai <= bf && bi <= af;
+}
+function mesmaSemana(a,b){
+  const da=parseData(a), db=parseData(b);
+  if(!da || !db) return false;
+  const inicioA=new Date(da); inicioA.setDate(da.getDate()-da.getDay()); inicioA.setHours(0,0,0,0);
+  const inicioB=new Date(db); inicioB.setDate(db.getDate()-db.getDay()); inicioB.setHours(0,0,0,0);
+  return dataStr(inicioA)===dataStr(inicioB);
+}
+function gerarPontosAtencao(){
+  const pontos = [];
+
+  avaliacoes.forEach(a=>{
+    const d = diasRest(a.fim);
+
+    if(!a.inicio || !a.fim){
+      pontos.push({
+        tipo:'Ausência de data',
+        severidade:1,
+        nome:a.nome,
+        detalhe:'Sem início ou entrega prevista cadastrada.',
+        item:a
+      });
+    }
+
+    if(a.st==='pausado'){
+      pontos.push({
+        tipo:'Avaliação pausada',
+        severidade:2,
+        nome:a.nome,
+        detalhe:'Status pausado. Vale verificar se segue fora do cronograma ou se precisa de retomada.',
+        item:a
+      });
+    }
+
+    if(a.st!=='concluido' && a.st!=='pausado' && (a.pct||0) < .3){
+      pontos.push({
+        tipo:'Progresso abaixo de 30%',
+        severidade:2,
+        nome:a.nome,
+        detalhe:`Progresso atual: ${Math.round((a.pct||0)*100)}%.`,
+        item:a
+      });
+    }
+
+    if(a.fim && a.st!=='concluido' && a.st!=='pausado'){
+      if(d !== null && d < 0){
+        pontos.push({
+          tipo:'Prazo vencido',
+          severidade:1,
+          nome:a.nome,
+          detalhe:`${Math.abs(d)} dia(s) de atraso.`,
+          item:a
+        });
+      } else if(d !== null && d <= 5){
+        pontos.push({
+          tipo:'Prazo próximo',
+          severidade:2,
+          nome:a.nome,
+          detalhe:`${d} dia(s) para o prazo.`,
+          item:a
+        });
+      }
+    }
+  });
+
+  const futuras = avaliacoes.filter(a=>a.fim && a.st!=='concluido' && a.st!=='pausado');
+  futuras.forEach(a=>{
+    const grupo = futuras.filter(b => b.id !== a.id && mesmaSemana(a.fim,b.fim));
+    if(grupo.length){
+      pontos.push({
+        tipo:'Entregas na mesma semana',
+        severidade:3,
+        nome:a.nome,
+        detalhe:`Há ${grupo.length+1} entrega(s) previstas na mesma semana.`,
+        item:a
+      });
+    }
+  });
+
+  const comPeriodo = avaliacoes.filter(a=>a.inicio && a.fim && a.st!=='concluido' && a.st!=='pausado');
+  comPeriodo.forEach(a=>{
+    const conflitos = comPeriodo.filter(b => b.id !== a.id && periodoSobrepoe(a,b));
+    if(conflitos.length){
+      pontos.push({
+        tipo:'Risco de conflito entre cronogramas',
+        severidade:3,
+        nome:a.nome,
+        detalhe:`Sobreposição de período com ${conflitos.length} outra(s) avaliação(ões).`,
+        item:a
+      });
+    }
+  });
+
+  const prioridade = {'Ausência de data':1,'Prazo vencido':1,'Avaliação pausada':2,'Progresso abaixo de 30%':2,'Prazo próximo':2,'Entregas na mesma semana':3,'Risco de conflito entre cronogramas':3};
+  return pontos
+    .sort((x,y)=>(prioridade[x.tipo]||9)-(prioridade[y.tipo]||9) || String(x.item.fim||'9999').localeCompare(String(y.item.fim||'9999')))
+    .slice(0,12);
+}
+function corAtencao(tipo){
+  if(tipo==='Ausência de data' || tipo==='Prazo vencido') return '#e74c3c';
+  if(tipo==='Avaliação pausada' || tipo==='Progresso abaixo de 30%' || tipo==='Prazo próximo') return '#f39c12';
+  return '#2e6da4';
+}
+
+
+function renderCalendario(){
+  const lista=aplicarFiltros(avaliacoes);
+  if(!lista.length){
+    document.getElementById('container-tabela').innerHTML='<div class="empty">Nenhuma avaliação encontrada com os filtros selecionados.</div>';
+    return;
+  }
+  let html=`<table><thead><tr>
+    <th>Avaliação</th>
+    <th>Descrição Executiva</th>
+    <th>Programa</th>
+    <th>Tipo</th>
+    <th>Responsável</th>
+    <th>Início</th>
+    <th>Entrega prevista</th>
+    <th>Entrega real</th>
+    <th>Status</th>
+    <th>%</th>
+    <th>Link</th>
+  </tr></thead><tbody>`;
+  lista.forEach(a=>{
+    const d=diasRest(a.fim);
+    let alerta='';
+    if(a.st!=='concluido' && d!==null){
+      if(d<0) alerta=`<span class="prazo-alerta">${Math.abs(d)}d atrasado</span>`;
+      else if(d<=5) alerta=`<span class="prazo-alerta">${d}d para o prazo</span>`;
+    }
+    let entrega='—';
+    if(a.entregaReal){
+      const real=parseData(a.entregaReal), prev=parseData(a.fim);
+      let cls='entrega-no-prazo', label='no prazo';
+      if(real && prev && real<prev){cls='entrega-antes';label='antes do prazo'}
+      if(real && prev && real>prev){cls='entrega-depois';label='após o prazo'}
+      entrega=`<span class="entrega-real ${cls}">${fmtData(a.entregaReal)} · ${label}</span>`;
+    }
+    const pct=Math.round((a.pct||0)*100);
+    html+=`<tr>
+      <td class="td-nome">${escapeHtml(a.nome)}</td>
+
+      <td>
+        <div class="obs" style="max-width:320px">
+          ${a.obs ? escapeHtml(a.obs) : '—'}
+        </div>
+      </td>
+
+      <td><span class="tag tag-${a.programa}">${tagLabel(a.programa)}</span></td>
+      <td>${escapeHtml(a.tipo)}</td>
+      <td>${escapeHtml(a.responsavel||'—')}</td>
+      <td>${fmtData(a.inicio)}</td>
+      <td>${fmtData(a.fim)}${ehFeriado(a.fim)?` <span title="${ehFeriado(a.fim)}">⚠</span>`:''}${alerta}</td>
+      <td>${entrega}</td>
+      <td><span class="st ${statusClass(a.st)}">${statusLabel(a.st)}</span></td>
+      <td><span class="barra-w"><span class="barra-f" style="width:${pct}%;background:${corBarra(a.pct||0)}"></span></span><span class="pct-txt">${pct}%</span></td>
+      <td>
+        <div class="link-cell">
+          ${obterLink(a)?`<a class="link-entrega" target="_blank" href="${escapeHtml(obterLink(a))}">Abrir</a>`:'<span class="obs">—</span>'}
+          <button class="btn btn-secondary btn-sm" onclick="abrirEditorLink('${escapeJs(a.id)}')">Editar link</button>
+        </div>
+      </td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('container-tabela').innerHTML=html;
+}
+
+function limparFiltros(){
+  ['busca','filtro-programa','filtro-tipo','filtro-status','filtro-mes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  renderTudo();
+}
+
+function resetGantt(){
+  document.getElementById('gantt-ini').value='2026-01';
+  document.getElementById('gantt-fim').value='2026-12';
+  document.getElementById('gantt-programa').value='';
+  renderGantt();
+}
+
+function renderGantt(){
+  const cont=document.getElementById('gantt-container');
+  if(!cont) return;
+  const prog=document.getElementById('gantt-programa')?.value||'';
+  const iniVal=document.getElementById('gantt-ini')?.value||'2026-01';
+  const fimVal=document.getElementById('gantt-fim')?.value||'2026-12';
+  const [anoI,mI]=iniVal.split('-').map(Number);
+  const [anoF,mF]=fimVal.split('-').map(Number);
+  const dias=[];
+  let cur=new Date(anoI,mI-1,1);
+  const fimD=new Date(anoF,mF,0);
+  while(cur<=fimD){
+    if(cur.getDay()!==0 && cur.getDay()!==6) dias.push(dataStr(cur));
+    cur=new Date(cur.getTime()+86400000);
+  }
+  let lista=prog?avaliacoes.filter(a=>a.programa===prog):avaliacoes;
+  lista=lista.filter(a=>a.inicio&&a.fim);
+  if(!lista.length){ cont.innerHTML='<div class="empty">Nenhuma avaliação com período definido.</div>'; return; }
+
+  const meses={};
+  dias.forEach(d=>{ const k=d.slice(0,7); meses[k]=(meses[k]||0)+1; });
+  const nomMes=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  let html='<table class="gantt-table"><thead><tr><th class="col-tarefa">Avaliação</th><th class="col-resp">Programa</th>';
+  Object.entries(meses).forEach(([k,c])=>{ const m=parseInt(k.split('-')[1]); html+=`<th colspan="${c}" class="gantt-mes-header">${nomMes[m-1]}</th>`; });
+  html+='</tr><tr><th class="col-tarefa"></th><th class="col-resp"></th>';
+  dias.forEach(d=>{ const dt=parseData(d); html+=`<th style="min-width:14px;padding:2px 1px;font-size:.52rem">${dt.getDate()}</th>`; });
+  html+='</tr></thead><tbody>';
+
+  lista.forEach(a=>{
+    const ini=parseData(a.inicio), fim=parseData(a.fim);
+    html+=`<tr><td class="col-tarefa">${escapeHtml(a.nome)}</td><td class="col-resp">${tagLabel(a.programa)}</td>`;
+    dias.forEach(d=>{
+      const dd=parseData(d);
+      const ativo=ini&&fim&&dd>=ini&&dd<=fim;
+      const fer=ehFeriado(d);
+      let cls='';
+      if(ativo && fer) cls='gantt-cell-feriado';
+      else if(ativo && a.st==='concluido') cls='gantt-cell-concluido';
+      else if(ativo && a.st==='pendente') cls='gantt-cell-vencido';
+      else if(ativo) cls='gantt-cell-ativo';
+      html+=`<td class="${cls}" title="${ativo?escapeHtml(a.nome)+' '+fmtData(a.inicio)+' → '+fmtData(a.fim):''}"></td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table><div class="gantt-legenda"><span><span class="gantt-dot" style="background:#27ae60"></span>Concluído</span><span><span class="gantt-dot" style="background:#2e6da4"></span>Previsto/andamento</span><span><span class="gantt-dot" style="background:#e74c3c"></span>Vencido</span><span><span class="gantt-dot" style="background:#f39c12"></span>Feriado</span></div>';
+  cont.innerHTML=html;
+}
+
+function navCal(dir){ calMes+=dir; if(calMes>11){calMes=0;calAno++;} if(calMes<0){calMes=11;calAno--;} renderCalMensal(); }
+function irHoje(){ calAno=hoje.getFullYear(); calMes=hoje.getMonth(); renderCalMensal(); }
+
+function renderCalMensal(){
+  const grid=document.getElementById('cal-grid');
+  if(!grid) return;
+  const nomes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('cal-titulo').textContent=nomes[calMes]+' '+calAno;
+  grid.innerHTML='';
+  const primeiro=new Date(calAno,calMes,1);
+  const ultimo=new Date(calAno,calMes+1,0);
+  for(let i=0;i<primeiro.getDay();i++){
+    const div=document.createElement('div'); div.className='cal-day outro-mes'; div.innerHTML='<div class="dia-num"> </div>'; grid.appendChild(div);
+  }
+  for(let d=1; d<=ultimo.getDate(); d++){
+    const dStr=`${calAno}-${String(calMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const atividades=avaliacoes.filter(a=>a.fim===dStr || a.inicio===dStr || a.entregaReal===dStr);
+    const div=document.createElement('div');
+    div.className='cal-day'+(dStr===dataStr(hoje)?' hoje-cal':'')+(ehFeriado(dStr)?' feriado-cal':'')+(atividades.length?' tem-atividade':'');
+    if(atividades.length) div.onclick=()=>abrirDetalheDia(dStr,atividades);
+    const cores=['#2e6da4','#27ae60','#f39c12','#8e44ad','#e74c3c'];
+    const pontos=atividades.slice(0,6).map((a,i)=>`<div class="ponto" style="background:${cores[i%cores.length]}"></div>`).join('');
+    const labels=atividades.slice(0,2).map(a=>`<div class="dia-label">${escapeHtml(a.nome).slice(0,22)}…</div>`).join('');
+    div.innerHTML=`<div class="dia-num">${d}${ehFeriado(dStr)?' ⚠':''}</div><div class="dia-pontos">${pontos}</div>${labels}`;
+    grid.appendChild(div);
+  }
+}
+
+function abrirDetalheDia(dStr,atividades){
+  document.getElementById('modal-dia-titulo').textContent=fmtDataLonga(dStr);
+  const fer=ehFeriado(dStr);
+  let html=fer?`<div style="background:#fff3cd;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:.8rem;color:#856404">⚠ <strong>${fer}</strong></div>`:'';
+  atividades.forEach(a=>{
+    const marcas=[];
+    if(a.inicio===dStr) marcas.push('Início previsto');
+    if(a.fim===dStr) marcas.push('Entrega prevista');
+    if(a.entregaReal===dStr) marcas.push('Entrega real');
+    html+=`<div style="background:#f8f9fc;border-radius:8px;padding:10px 14px;margin-bottom:8px;border-left:3px solid #2e6da4">
+      <div style="font-weight:850;font-size:.82rem;color:#1a3a5c">${escapeHtml(a.nome)}</div>
+      <div style="font-size:.75rem;color:#4a5568;margin-top:4px">${marcas.join(' · ')}</div>
+      <div style="font-size:.72rem;color:#718096;margin-top:3px">${a.tipo} · ${tagLabel(a.programa)} · ${escapeHtml(a.responsavel||'—')}</div>
+    </div>`;
+  });
+  document.getElementById('modal-dia-conteudo').innerHTML=html;
+  document.getElementById('modal-dia').classList.add('open');
+}
+
+function trocarAba(aba,btn){
+  document.querySelectorAll('.aba').forEach(b=>b.classList.remove('ativa'));
+  document.querySelectorAll('.secao').forEach(s=>s.classList.remove('ativa'));
+  btn.classList.add('ativa');
+  document.getElementById('secao-'+aba).classList.add('ativa');
+  if(aba==='gantt') renderGantt();
+  if(aba==='mensal') renderCalMensal();
+}
+function fecharModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+
+function exportarCSV(){
+  const linhas=[['Avaliação','Programa','Tipo','Responsável','Início previsto','Entrega prevista','Entrega real','Status','Progresso','Observação','Link']];
+  aplicarFiltros(avaliacoes).forEach(a=>linhas.push([a.nome,a.programa,a.tipo,a.responsavel,a.inicio,a.fim,a.entregaReal,statusLabel(a.st),Math.round((a.pct||0)*100)+'%',a.obs,obterLink(a)]));
+  const csv=linhas.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='tv_executiva_avaliacoes_'+dataStr(hoje)+'.csv';
+  a.click();
+}
+function toast(msg,tipo=''){
+  const t=document.getElementById('toast'); t.textContent=msg; t.className='toast '+tipo; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+window.onload=()=>{
+  document.getElementById('badge-hoje').textContent='▢ '+hoje.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('gantt-ini').value='2026-01';
+  document.getElementById('gantt-fim').value='2026-12';
+  carregarNotion();
+  setInterval(carregarNotion, POLLING_MS);
+};
+</script>
+</body>
+</html>

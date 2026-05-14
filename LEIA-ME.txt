@@ -1,0 +1,12 @@
+PAINEL DE AVALIAÇÕES — NETLIFY + NOTION
+
+Suba este ZIP completo no Netlify.
+
+Depois, em Project configuration > Environment variables, cadastre:
+NOTION_TOKEN = token da integração do Notion
+NOTION_DATABASE_ID = 2df6e2c7d2c9819e8ffed4fae0536d3d
+
+Opcional para aba de equipe:
+NOTION_EQUIPE_DATABASE_ID = id do database da equipe
+
+No Notion, compartilhe o database com a integração.
